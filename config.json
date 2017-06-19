@@ -1,0 +1,11 @@
+{
+  "ambari": {
+      "host": "c7001.ambari.apache.org",
+      "user": "admin",
+      "pass": "admin",
+      "port": "8443"
+    },
+  "ssh.key": "/Users/sbathe/.ssh/sbathe-rackspace.pem",
+  "inventory_dir": "/tmp/aninventory",
+  "testcaseroot": "/Users/sbathe/repos/Hadoop-Failures/" 
+}
