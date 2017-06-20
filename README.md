@@ -1,5 +1,5 @@
 # failhadoop
-A framework for running various failure tests against a Hadoop cluster
+A framework for running various failure scenarios against a Hadoop cluster
 Features:
 - Gets host, services, components inventory from Ambari
 - Supports running adhoc scripts on selected hostgroups. Uses Ansible as a framework for running tasks
