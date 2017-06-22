@@ -1,3 +1,4 @@
+*** Alpha software. Incomplete docs. Things are still changing ***
 # failhadoop
 A framework for running various failure scenarios against a Hadoop cluster
 Features:
