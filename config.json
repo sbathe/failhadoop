@@ -1,5 +1,6 @@
 {
   "ambari": {
+      "protocol": "http",
       "host": "c7001.ambari.apache.org",
       "user": "admin",
       "pass": "admin",
