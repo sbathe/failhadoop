@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 from ambariclient.client import Ambari
 import argparse, json, collections, os, yaml
-import socket
+import socket, requests
+
+# We use python ambari client from
+# https://github.com/jimbobhickville/python-ambariclient for most of the
+# read-only operations
+
+# Most of the configuration related stuff is shamelessly borrowed from jupyter
+# notebooks at http://nbviewer.jupyter.org/github/seanorama/ambari-bootstrap/tree/master/api-examples/
 
 # TODO: 
 # - Handle exceptions at all stages
 # - Make a more featureful inventory with host args and child groups for
 # clusters
-"""
-#  we make this as a lib instead of executable
-parser = argparse.ArgumentParser()
-parser.add_argument("--list", action="store_true", default=True, dest='list', help="list host inventory from Ambari")
-parser.add_argument("--refresh", action="store_true", default=False, dest='refresh', help="Force refresh host inventory from Ambari")
-parser.add_argument("-c", "--config", action="store", dest='config_file', default="config.json", help="Configuration file to load, default config.json from CWD")
-args = parser.parse_args()
-"""
+
 def load_config(config_file="config.json"):
     """
     Read the given file to build configuration, the configuration needs to be
@@ -77,15 +77,40 @@ def fetch_inventory(config_file='config.json'):
     inventory = get_inventory(client)
     write_inventory(inventory,outdir)
 
-'''
-Rest of it is moot, cause now we just write the inventory for ansible, rest is
-upto ansible to read. Essentially, no dynamic inventory for now
-if os.path.isfile('inventory.json'):
-        with open('inventory.json') as f:
-          a = json.load(f)
-        print(json.dumps(a, indent=2, sort_keys=True))
-    else:
-        inventory = get_inventory(client)
-        write_inventory(inventory)
-        print(json.dumps(inventory,indent=2,sort_keys=True)) 
-'''
+def setup_ambari_session(config):
+    ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
+    s = requests.Session()
+    s.auth = (config['ambari']['user'],config['ambari']['pass'])
+    s.headers.update({'X-Requested-By':'failhadoop'})
+    r = s.get(ambari_url + '/api/v1/clusters')
+    assert r.status_code == 200, "We did not get a valid respose code back from \
+                      Ambari, you might want to check either server or auth \
+                      parameters"
+    return(s)
+
+def get_current_config_tag(config, cluster, ambari_session, config_element):
+    ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
+    r = ambari_session.get(ambari_url + '/api/v1/clusters/' + cluster + '?fields=Clusters/desired_configs/' + config_element)
+    return r.json()['Clusters']['desired_configs'][config_element]['tag']
+
+def get_tagged_config(config, cluster, ambari_session, config_element, tag):
+    ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
+    r = ambari_session.get(ambari_url + '/api/v1/clusters/' + cluster + '/configurations?type=' + config_element + '&tag=' + tag)
+    return r.json()['items'][0]
+
+def update_component_config(config, cluster, ambari_session, config_element, new_element_config ):
+    '''
+    new_element_config should be an element similar to the one returned by
+    get_current_config_tag. Only replace the content / elements you want to
+    replace. Rest of the things will be taken carfe by this function
+    '''
+    ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
+    # Manipulate the new_element_config
+    new_element_config['tag'] = 'version' + str(int(round(time.time() * 1000000000)))
+    del new_element_config['Config']
+    del new_element_config['href']
+    del new_element_config['version']
+    new_element_config = {"Clusters": {"desired_config": new_element_config}}
+    body = new_element_config
+    r = ambari_session.put(ambari_url + '/api/v1/clusters/' + cluster, data=json.dumps(body)))
+    return r
