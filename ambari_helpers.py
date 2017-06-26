@@ -113,7 +113,7 @@ def update_component_config(config, cluster, ambari_session, config_element, new
     del new_element_config['version']
     new_element_config = {"Clusters": {"desired_config": new_element_config}}
     body = new_element_config
-    r = ambari_session.put(ambari_url + '/api/v1/clusters/' + cluster, data=json.dumps(body)))
+    r = ambari_session.put(ambari_url + '/api/v1/clusters/' + cluster, data=json.dumps(body))
     return r
 
 def get_config_diff(old_config, new_config):
