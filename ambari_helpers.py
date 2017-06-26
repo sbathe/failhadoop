@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from ambariclient.client import Ambari
 import argparse, json, collections, os, yaml
-import socket, requests
+import socket, requests, difflib
+
 
 # We use python ambari client from
 # https://github.com/jimbobhickville/python-ambariclient for most of the
@@ -114,3 +115,11 @@ def update_component_config(config, cluster, ambari_session, config_element, new
     body = new_element_config
     r = ambari_session.put(ambari_url + '/api/v1/clusters/' + cluster, data=json.dumps(body)))
     return r
+
+def get_config_diff(old_config, new_config):
+    out = str()
+    a = json.dumps(old_config, indent=2, sort_keys=True).splitlines(1)
+    b = json.dumps(new_config, indent=2, sort_keys=True).splitlines(1)
+    for l in difflib.unified_diff(a, b):
+        out += l
+    return out
