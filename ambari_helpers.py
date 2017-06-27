@@ -11,8 +11,10 @@ import socket, requests, difflib
 # Most of the configuration related stuff is shamelessly borrowed from jupyter
 # notebooks at http://nbviewer.jupyter.org/github/seanorama/ambari-bootstrap/tree/master/api-examples/
 
-# TODO: 
-# - Handle exceptions at all stages
+# TODO:
+# - Handle exceptions at all stages:
+#   - possibly write a generic try-catch function and get all API requests
+#     pass through it
 # - Make a more featureful inventory with host args and child groups for
 # clusters
 
