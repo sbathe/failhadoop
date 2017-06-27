@@ -123,3 +123,46 @@ def get_config_diff(old_config, new_config):
     for l in difflib.unified_diff(a, b):
         out += l
     return out
+
+def stop_service_component_on_host(config, cluster, session,host,component):
+    ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
+    post_uri = ambari_url + '/api/v1/clusters/{0}/hosts/{1}/host_components/{2}'.format(cluster,host,component)
+    post_data = {
+                 "HostRoles":
+                   {"state": "INSTALLED"}
+                }
+    r = session.post(post_uri, post_data)
+    return r
+
+#https://community.hortonworks.com/questions/91083/rest-api-to-stopstart-a-host-component-running-on.html
+def stop_services_in_bulk(config, cluster, session, service, component ):
+    ambari_url = config['ambari']['protocol'] + '://' +\
+       config['ambari']['host'] + ':' + config['ambari']['port']
+    post_uri = ambari_url + 'api/v1/clusters/{0}/requests'.format(cluster)
+    post_data = {
+        "RequestInfo": {
+            "command": "RESTART",
+            "context": "Restart services on the selected hosts",
+            "operation_level": {
+              "level": "HOST",
+              "cluster_name": cluster
+            }
+         },
+         "Requests/resource_filters": [
+            {
+              "service_name": service,
+              "component_name": component,
+              "hosts_predicate":
+                "HostRoles/component_name={0}".format(component)
+            }
+          ]
+        }
+    r = session.post(post_uri,post_data)
+    return r
+def get_request_status(config, cluster, session, requestid):
+    ambari_url = config['ambari']['protocol'] + '://' +\
+       config['ambari']['host'] + ':' + config['ambari']['port']
+    uri = ambari_url +\
+          '/api/v1/clusters/{0}/requests/{1}'.format(cluster,requestid)
+    r = session.get(uri)
+    return r
