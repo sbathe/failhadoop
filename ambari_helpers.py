@@ -135,33 +135,32 @@ def stop_service_component_on_host(config, cluster, session,host,component):
                 }
     r = session.post(post_uri, post_data)
     return r
-"""
+
 #https://community.hortonworks.com/questions/91083/rest-api-to-stopstart-a-host-component-running-on.html
 def stop_services_in_bulk(config, cluster, session, service, component ):
     ambari_url = config['ambari']['protocol'] + '://' +\
        config['ambari']['host'] + ':' + config['ambari']['port']
     post_uri = ambari_url + '/api/v1/clusters/{0}/requests'.format(cluster)
-    post_data = "{
-        \"RequestInfo\": {
-            \"command\": \"RESTART\",
-            \"context\": \"Restart services on the selected hosts\",
-            \"operation_level\": {
-              \"level\": \"HOST\",
-              \"cluster_name\": \"{0}\"
+    post_data = {
+        "RequestInfo": {
+            "command": "RESTART",
+            "context": "Restart services on the selected hosts",
+            "operation_level": {
+              "level": "HOST",
+              "cluster_name": "{0}".format(cluster)
             }
          },
-         \"Requests/resource_filters\": [
+         "Requests/resource_filters": [
             {
-              \"service_name\": \"{1}\"
-              \"component_name\": \"{2}\"
-              \"hosts_predicate\":
-                \"HostRoles/component_name={2}\"
+              "service_name": "{0}".format(service),
+              "component_name": "{0}".format(component),
+              "hosts_predicate":
+                "HostRoles/component_name={0}".format(component)
             }
           ]
-        }".format(cluster, service, component)
-    r = session.post(post_uri,post_data)
+        }
+    r = session.post(post_uri,json=post_data)
     return r
-"""
 def get_request_status(config, cluster, session, requestid):
     ambari_url = config['ambari']['protocol'] + '://' +\
        config['ambari']['host'] + ':' + config['ambari']['port']
