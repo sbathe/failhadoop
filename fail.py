@@ -112,19 +112,22 @@ if not script:
 testconfig = load_testconfig(config,component,testno)
 scriptdir = os.path.join(config['testcaseroot'],component.upper(), testno)
 if testconfig:
-    if testconfig['mode'] == 'ansible':
+    if testconfig['mode'] == 'ansible' and not script[-3] == 'yml':
         results = failhadoop.ansible_helpers.run_play(config['inventory_dir'],testconfig['hostpattern'],os.path.join(scriptdir, script[1]),connection='ssh')
-        tqm = results[1]
-        stats = tqm._stats
-        # Test if success for record_logs
-        run_success = True
-        hosts = sorted(stats.processed.keys())
-        for h in hosts:
-            t = stats.summarize(h)
-            if t['unreachable'] > 0 or t['failures'] > 0:
-                run_success = False
+   else:
+       results = failhadoop.ansible_helpers.run_playbook(config['inventory_dir'],os.path.join(scriptdir,
+                                                                                    script[1]))
+    tqm = results[1]
+    stats = tqm._stats
+    # Test if success for record_logs
+    run_success = True
+    hosts = sorted(stats.processed.keys())
+    for h in hosts:
+        t = stats.summarize(h)
+        if t['unreachable'] > 0 or t['failures'] > 0:
+            run_success = False
 
-        tqm.send_callback('default', success=run_success)
+    tqm.send_callback('default', success=run_success)
 else:
     print("""There does not seem to any testconfig.json in {0}""".format(os.path.join(config['testcaseroot'],component.upper(),testno)))
     sys.exit(1)
