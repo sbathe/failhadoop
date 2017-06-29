@@ -133,11 +133,21 @@ def stop_service_component_on_host(config, cluster, session,host,component):
                  "HostRoles":
                    {"state": "INSTALLED"}
                 }
-    r = session.post(post_uri, post_data)
+    r = session.put(post_uri, data=json.dumps(post_data))
+    return r
+
+def start_service_component_on_host(config, cluster, session,host,component):
+    ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
+    post_uri = ambari_url + '/api/v1/clusters/{0}/hosts/{1}/host_components/{2}'.format(cluster,host,component)
+    post_data = {
+                 "HostRoles":
+                   {"state": "STARTED"}
+                }
+    r = session.put(post_uri, data=json.dumps(post_data))
     return r
 
 #https://community.hortonworks.com/questions/91083/rest-api-to-stopstart-a-host-component-running-on.html
-def stop_services_in_bulk(config, cluster, session, service, component ):
+def restart_services_in_bulk(config, cluster, session, service, component ):
     ambari_url = config['ambari']['protocol'] + '://' +\
        config['ambari']['host'] + ':' + config['ambari']['port']
     post_uri = ambari_url + '/api/v1/clusters/{0}/requests'.format(cluster)
@@ -159,8 +169,28 @@ def stop_services_in_bulk(config, cluster, session, service, component ):
             }
           ]
         }
-    r = session.post(post_uri,json=post_data)
+    r = session.post(post_uri,data=json.dumps(post_data))
     return r
+
+def control_service_on_cluster(config, cluster, session,service,state):
+    if state not in ['stop','start']:
+        msg = "Invalid state, we only support 'start' and 'stop' for now"
+        return msg
+    if state == 'stop':
+        state = 'INSTALLED'
+    if state == 'start':
+        state = 'STARTED'
+
+    ambari_url = config['ambari']['protocol'] + '://' +\
+       config['ambari']['host'] + ':' + config['ambari']['port']
+    post_uri = ambari_url +\
+    '/api/v1/clusters/{0}/services/{1}'.format(cluster,service)
+    post_data = {"RequestInfo": {"context" :"Start {0} via REST".format(service)}, "Body":
+                 {"ServiceInfo": {"state": "{0}".format(state)}}}
+    r = session.put(post_uri,data=json.dumps(post_data))
+    return r
+
+
 def get_request_status(config, cluster, session, requestid):
     ambari_url = config['ambari']['protocol'] + '://' +\
        config['ambari']['host'] + ':' + config['ambari']['port']
