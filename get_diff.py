@@ -1,6 +1,10 @@
 #!/usr/bin/env python2
-import argparse, json, os, time
+import argparse, json, os, time, sys
 import requests, difflib
+
+"""
+
+"""
 
 def load_config(config_file="config.json"):
     """
@@ -52,6 +56,17 @@ def get_config_diff(old_config, new_config):
         out += l
     return out
 
+def sanitize_input(args):
+    if not args.cluster:
+        print("Name of the Cluster on Ambari is required")
+        parser.print_help()
+        sys.exit(2)
+
+    if args.tag1 and not args.tag2:
+        print("I need 2 tags to compare")
+        parser.print_help()
+        sys.exit(2)
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", action="store_true", default=False, dest='verbose',
                     help="increase output verbosity")
@@ -63,17 +78,15 @@ parser.add_argument("--cluster", action="store", default=None, dest='cluster')
 parser.add_argument("--element", action="store", dest='element', default=None)
 parser.add_argument("--tag1", action="store", dest='tag1', default=None)
 parser.add_argument("--tag2", action="store", dest='tag2', default=None)
-"""
-reqargs = parser.add_argument_group('required arguments')
-reqargs.add_argument("--component", action="store", dest='component',
-                    help="component to run test case against", required=True)
-reqargs.add_argument("--testnumber", action="store", dest='testno',
-                    help="Component test case number to run",required=True)
-"""
 args = parser.parse_args()
-conf_file = args.conf
-config = json.load(open(conf_file, 'r'))
+
+with open(args.conf) as fp:
+  config = json.load(fp)
+
+sanitize_input(args)
+
 s = setup_ambari_session(config)
+
 if not args.tag1:
     if args.get_tags:
         tags_and_versions = get_config_version_tags(config,args.cluster, s,
