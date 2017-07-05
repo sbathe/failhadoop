@@ -118,6 +118,19 @@ def update_component_config(config, cluster, ambari_session, config_element, new
     r = ambari_session.put(ambari_url + '/api/v1/clusters/' + cluster, data=json.dumps(body))
     return r
 
+def get_config_version_tags(config, cluster, ambari_session, config_element):
+    """
+    Returns a list of tuples (tag, version) we know about the config_element
+    """
+    ambari_url = config['ambari']['protocol'] + '://' +\
+        config['ambari']['host'] + ':' + config['ambari']['port']
+    r = ambari_session.get(ambari_url + '/api/v1/clusters/' + cluster +
+                           '/configurations?type=' + config_element)
+    tp = list()
+    for e in r.json()['items']:
+        tp.append((e['tag'],e['version']))
+    return tp
+
 def get_config_diff(old_config, new_config):
     out = str()
     a = json.dumps(old_config, indent=2, sort_keys=True).splitlines(1)
