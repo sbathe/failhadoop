@@ -200,6 +200,26 @@ def restart_services_in_bulk(config, cluster, session, service, component ):
     r = session.post(post_uri,data=json.dumps(post_data))
     return r
 
+# https://issues.apache.org/jira/browse/AMBARI-14394
+def restart_stale_configs(config, cluster, session):
+    ambari_url = config['ambari']['protocol'] + '://' +\
+       config['ambari']['host'] + ':' + config['ambari']['port']
+    post_uri = ambari_url + '/api/v1/clusters/{0}/requests'.format(cluster)
+    post_data = {
+      "RequestInfo": {
+        "context": "Restart stale",
+        "operational_level": "host_component",
+        "command": "RESTART"
+      },
+      "Requests/resource_filters": [
+        {
+          "hosts_predicate": "HostRoles/stale_configs=true"
+        }
+      ]
+    }
+    r = session.post(post_uri,data=json.dumps(post_data))
+    return r
+
 def get_request_status(config, cluster, session, requestid):
     ambari_url = config['ambari']['protocol'] + '://' +\
        config['ambari']['host'] + ':' + config['ambari']['port']
