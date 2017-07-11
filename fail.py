@@ -23,8 +23,8 @@ parser.add_argument("-i", "--inventory-dir", action="store", default='/tmp/inven
 parser.add_argument("--testcase-root", action="store", default=os.path.join(os.path.expanduser("~"),'repos/Hadoop-Failures'), dest='testcaseroot', help="location of the hadoop failure repository")
 parser.add_argument("--ssh-key", action="store", default=os.path.join(os.path.expanduser("~"),'.ssh/id_rsa'), dest='ssh_key', help="location of the ssh private key used by ansible to ssh")
 reqargs = parser.add_argument_group('required arguments')
-reqargs.add_argument("--component", action="store", dest='component',
-                    help="component to run test case against", required=True)
+reqargs.add_argument("--service", action="store", dest='service',
+                    help="service to run test case against", required=True)
 reqargs.add_argument("--testnumber", action="store", dest='testno',
                     help="Component test case number to run",required=True)
 args = parser.parse_args()
@@ -36,7 +36,7 @@ def load_config(args, conf='config.json'):
     """
     config = dict()
     #loc = [conf, os.curdir+"config.json", ]
-    for loc in os.curdir, os.path.expanduser("~"), "/etc/failhadoop", os.environ.get("FAILHADOOP_ROOT"):
+    for loc in args.conf, os.curdir, os.path.expanduser("~"), "/etc/failhadoop", os.environ.get("FAILHADOOP_ROOT"):
       try:
         with open(os.path.join(loc,"config.json")) as source:
             conf = json.load(source)
@@ -92,7 +92,7 @@ def get_test_script(config, component, testnumber):
 
 # Here starts the main execution
 config = load_config(args)
-component = args.component
+component = args.service
 testno = args.testno
 
 if not check_component_exists(config, component):
@@ -111,12 +111,15 @@ if not script:
 
 testconfig = load_testconfig(config,component,testno)
 scriptdir = os.path.join(config['testcaseroot'],component.upper(), testno)
+config['service'] = args.service
+config['config_file'] = args.conf if args.conf else 'config.json'
+config.update(testconfig)
 if testconfig:
-    if testconfig['mode'] == 'ansible' and not script[-3] == 'yml':
+    if testconfig['mode'] == 'ansible' and not script[1][-3] == 'yml':
         results = failhadoop.ansible_helpers.run_play(config['inventory_dir'],testconfig['hostpattern'],os.path.join(scriptdir, script[1]),connection='ssh')
    else:
        results = failhadoop.ansible_helpers.run_playbook(config['inventory_dir'],os.path.join(scriptdir,
-                                                                                    script[1]))
+                                                         script[1]), extra_vars = config)
     tqm = results[1]
     stats = tqm._stats
     # Test if success for record_logs

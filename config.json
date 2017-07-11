@@ -7,6 +7,7 @@
       "port": "8443"
     },
   "ssh.key": "/Users/sbathe/.ssh/sbathe-rackspace.pem",
-  "inventory_dir": "/tmp/aninventory",
+  "failhadooproot": "/Users/sbathe/repos/failhadoop/",
+  "inventory_dir": "/Users/sbathe/repos/failhadoop/inventory",
   "testcaseroot": "/Users/sbathe/repos/Hadoop-Failures/" 
 }

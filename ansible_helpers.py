@@ -15,7 +15,7 @@ from ansible.playbook.play_context import PlayContext
 from ansible.plugins.callback import CallbackBase
 from ansible.executor.stats import AggregateStats
 
-def run_playbook(inventory_root, playbook, connection='ssh',module_path=None, forks=5, become=None,
+def run_playbook(inventory_root, playbook, extra_vars=None, connection='ssh', module_path=None, forks=5, become=None,
                  become_method=None, become_user=None, check=False):
    # We need a way to pass options to Ansible. We do so by passing a tuple object
    # This is not a exhaustive list, we only do what we need
@@ -23,6 +23,7 @@ def run_playbook(inventory_root, playbook, connection='ssh',module_path=None, fo
    # initialize needed objects
    stats = AggregateStats()
    variable_manager = VariableManager()
+   variable_manager.extra_vars = extra_vars
    loader = DataLoader()
    options = Options(connection=connection, module_path=module_path, forks=forks, become=become, become_method=become_method, become_user=become_user, check=check)
    passwords = dict(vault_pass='secret') # this is required, for now would

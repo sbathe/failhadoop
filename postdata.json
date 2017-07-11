@@ -1,0 +1,16 @@
+{
+        "RequestInfo": {
+            "command": "RESTART",
+            "context": "Restart services on the selected hosts",
+            "operation_level": {
+              "level": "HOST",
+              "cluster_name": "sbathe"
+            }
+         },
+         "Requests/resource_filters": [
+            {
+              "service_name": "HDFS",
+              "component_name": "NAMENODE",
+              "hosts_predicate": "HostRoles/component_name=NAMENODE"
+            }]
+}
