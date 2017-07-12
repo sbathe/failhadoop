@@ -123,7 +123,7 @@ def update_component_config(config, cluster, ambari_session, config_element, new
     '''
     ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
     # Manipulate the new_element_config
-    new_element_config['tag'] = 'version' + str(round(time.time() * 1000000000))
+    new_element_config['tag'] = 'version' + str(round(time.time()))
     del new_element_config['Config']
     del new_element_config['href']
     del new_element_config['version']
