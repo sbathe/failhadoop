@@ -1,0 +1,14 @@
+{
+  "ambari": {
+      "protocol": "http",
+      "host": "rack7001",
+      "user": "admin",
+      "pass": "admin",
+      "port": "8080"
+    },
+  "cluster": "ss",
+  "ssh.key": "/Users/sbathe/.ssh/sbathe-rackspace.pem",
+  "failhadooproot": "/Users/sbathe/repos/failhadoop/",
+  "inventory_dir": "/Users/sbathe/repos/failhadoop/inventory",
+  "testcaseroot": "/Users/sbathe/repos/Hadoop-Failures/" 
+}

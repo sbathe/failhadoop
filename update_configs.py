@@ -4,17 +4,23 @@ import argparse, yaml, json
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", action="store_true", default=False, dest='verbose',
                     help="increase output verbosity")
-parser.add_argument("-c", "--config", action="store", default='config.json', dest='conf',
+parser.add_argument("-c", "--config", action="store", dest='conf',
                     help="config file to load, should be json")
 parser.add_argument("--testconfig", action="store", dest='testconfig',
                     help="Path to the json that has details on configuration changes")
 args = parser.parse_args()
 
 config = failhadoop.utils.load_config(args)
+if args.verbose:
+    print(json.dumps(config,indent=2))
 testconfig = json.load(open(args.testconfig))
 element = testconfig['configs']['element']
+if args.verbose:
+    print(element)
 s = failhadoop.ambari_helpers.setup_ambari_session(config)
 cluster = config['cluster'] if 'cluster' in config.keys() else failhadoop.ambari_helpers.get_clusters(config,s)
+if args.verbose:
+    print(cluster)
 cur_tag = failhadoop.ambari_helpers.get_current_config_tag(config, cluster, s, element)
 cur_config = failhadoop.ambari_helpers.get_tagged_config(config, cluster, s,
                                                          element, cur_tag)

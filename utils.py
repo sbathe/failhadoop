@@ -11,8 +11,8 @@ def load_config(args):
     #loc = [conf, os.curdir+"config.json", ]
     locations = [ os.curdir, os.path.expanduser("~"), "/etc/failhadoop",
                  os.environ.get("FAILHADOOP_ROOT") ]
-    if args.conf:
-        locations.append(args.conf)
+#    if args.conf:
+#        locations.append(args.conf)
 
     for loc in locations:
       try:
@@ -23,6 +23,13 @@ def load_config(args):
         pass
       except:
           print("Cannot load config from any of the locations {0}".format(locations))
+    try:
+        with open(args.conf) as source:
+            conf = json.load(source)
+            config.update(conf)
+    except IOError:
+          print("Cannot load config from any of the locations {0}".format(locations))
+
    # Override config elements from command line
     for a in vars(args):
        config[a] = getattr(args,a)
