@@ -9,6 +9,7 @@ from ansible.vars import VariableManager
 from ansible.inventory import Inventory
 from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
+from ansible.executor.playbook_executor import Playbook
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.playbook.block import Block
 from ansible.playbook.play_context import PlayContext
@@ -19,13 +20,13 @@ def run_playbook(inventory_root, playbook, extra_vars=None, connection='ssh', mo
                  become_method=None, become_user=None, check=False):
    # We need a way to pass options to Ansible. We do so by passing a tuple object
    # This is not a exhaustive list, we only do what we need
-   Options = namedtuple('Options', ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check'])
+   Options = namedtuple('Options', ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check', 'listhosts', 'listtasks', 'listtags', 'syntax'])
    # initialize needed objects
    stats = AggregateStats()
    variable_manager = VariableManager()
    variable_manager.extra_vars = extra_vars
    loader = DataLoader()
-   options = Options(connection=connection, module_path=module_path, forks=forks, become=become, become_method=become_method, become_user=become_user, check=check)
+   options = Options(connection=connection, module_path=module_path, forks=forks, become=become, become_method=become_method, become_user=become_user, check=check, listhosts=False, listtasks=False, listtags=False, syntax=False)
    passwords = dict(vault_pass='secret') # this is required, for now would
    # mostly be junk for us
 
@@ -33,9 +34,9 @@ def run_playbook(inventory_root, playbook, extra_vars=None, connection='ssh', mo
    inventory = Inventory(loader=loader, variable_manager=variable_manager, host_list=inventory_root)
    variable_manager.set_inventory(inventory)
    pbex = PlaybookExecutor(playbook, inventory=inventory, variable_manager=variable_manager, loader=loader,
-                                passwords=passwords)
+                                passwords=passwords, options = options)
    result = pbex.run()
-   tqm = self.pbex._tqm
+   tqm = pbex._tqm
    return (result, tqm)
 
 

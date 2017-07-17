@@ -28,6 +28,7 @@ reqargs.add_argument("--service", action="store", dest='service',
 reqargs.add_argument("--testnumber", action="store", dest='testno',
                     help="Component test case number to run",required=True)
 args = parser.parse_args()
+verbose = args.verbose
 
 def load_config(args, conf='config.json'):
     """
@@ -83,7 +84,7 @@ def load_testconfig(config,component,testnumber):
 def get_test_script(config, component, testnumber):
    ''' Check if there is a action script and return the name of the script,
    action.sh or action.py''' 
-   files = ['action.py', 'action.sh']
+   files = ['action.py', 'action.sh', 'action.yml']
    targetdir = os.path.join(config['testcaseroot'],component.upper(),testnumber)
    for f in files:
        if os.path.exists(os.path.join(targetdir, f)):
@@ -105,9 +106,14 @@ if not check_testcase_exists(config,component,testno):
     sys.exit(1)
 
 script = get_test_script(config, component, testno)
+if verbose:
+  print(script)
+  print(script[1][-3:])
+
 if not script:
-    print("There does not seem to any action.py or action.sh in {0}".format(os.path.join(config['testcaseroot'],component.upper(),testno)))
-    sys.exit(1)
+    if verbose:
+        print("There does not seem to any action.py or action.sh in {0}".format(os.path.join(config['testcaseroot'],component.upper(),testno)))
+        sys.exit(1)
 
 testconfig = load_testconfig(config,component,testno)
 scriptdir = os.path.join(config['testcaseroot'],component.upper(), testno)
@@ -115,11 +121,18 @@ config['service'] = args.service
 config['config_file'] = args.conf if args.conf else 'config.json'
 config.update(testconfig)
 if testconfig:
-    if testconfig['mode'] == 'ansible' and not script[1][-3] == 'yml':
+    if (testconfig['mode'] == 'ansible' and script[1][-3:] == 'yml'):
+        if verbose:
+            print("Running playbook: {0} on the remote hosts".format(script[1]))
+            print("calling run_playbook with args {0}, {1}, {2}".format(config['inventory_dir'],[os.path.join(scriptdir,
+                                                             script[1])], config))
+        results = failhadoop.ansible_helpers.run_playbook(config['inventory_dir'],[os.path.join(scriptdir,script[1])],config)
+    else:
+        if verbose:
+            print("Running script: {0} on the remote hosts".format(script[1]))
+            print("calling run_play")
         results = failhadoop.ansible_helpers.run_play(config['inventory_dir'],testconfig['hostpattern'],os.path.join(scriptdir, script[1]),connection='ssh')
-   else:
-       results = failhadoop.ansible_helpers.run_playbook(config['inventory_dir'],os.path.join(scriptdir,
-                                                         script[1]), extra_vars = config)
+
     tqm = results[1]
     stats = tqm._stats
     # Test if success for record_logs
