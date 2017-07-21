@@ -14,8 +14,8 @@ setup(
     author='Saurabh Bathe',
     author_email='sbathe@hortonworks.com',
     description='A framework for running various failure tests against Ambari managed Hadoop cluster(s)',
-    install_requires=[
-        "requests >= 2.13.0",
-        "ambariclient >= 0.5.10"
-    ]
+#    install_requires=[
+#        "requests >= 2.13.0",
+#        "ambariclient >= 0.5.10"
+#    ]
 )
