@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from ambariclient.client import Ambari
 import argparse, json, collections, os, yaml, time
-import socket, requests, difflib
+import socket, requests, difflib, urllib
+from failhadoop import utils
 
 
 # We use python ambari client from
@@ -17,7 +18,6 @@ import socket, requests, difflib
 #     pass through it
 # - Make a more featureful inventory with host args and child groups for
 # clusters
-
 def load_config(config_file="config.json"):
     """
     Read the given file to build configuration, the configuration needs to be
@@ -37,22 +37,16 @@ def get_inventory(client):
     Get details of hosts and the components they run from Ambari and create
     Inventory files for Anasible
     """
-    inventory = dict()
+    host = urllib.parse.urlparse(client.__dict__['base_url']).netloc.split(':')[0]
+    factory = lambda: collections.defaultdict(factory)
+    inventory = factory()
     for c in client.clusters().to_dict():
       cluster = c['cluster_name']
       host_components = client.clusters(cluster).host_components().to_dict()
-      inventory[cluster] = dict()
       for hc in host_components:
-        if hc['component_name'] not in inventory[cluster].keys():
-          inventory[cluster][hc['component_name']] = dict()
-          inventory[cluster][hc['component_name']]['hosts'] = dict()
-          inventory[cluster][hc['component_name']]['hosts'][hc['host_name']] = dict()
-        elif hc['host_name'] not in inventory[cluster][hc['component_name']]['hosts']:
-          inventory[cluster][hc['component_name']]['hosts'][hc['host_name']] = dict()
-      #clist = collections.defaultdict(list)
-      #for hc in host_components:
-      #  clist[hc['component_name']].append(hc['host_name'])
-    return inventory
+        inventory[host][cluster][hc['component_name']]['hosts'][hc['host_name']] = dict()
+    inventory[host][cluster]['AMBARI_SERVER']['hosts'][host] = dict()
+    return utils.defaultdict_to_regular(inventory)
 
 def write_inventory(inventory, outdir='/tmp/inventory'):
     if not os.path.isdir(outdir):

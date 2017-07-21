@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import json, yaml, os, sys
+from collections import defaultdict
 
 def load_config(args):
     """
@@ -35,6 +36,11 @@ def load_config(args):
        config[a] = getattr(args,a)
 
     return config
+
+def defaultdict_to_regular(d):
+      if isinstance(d, defaultdict):
+        d = {k: defaultdict_to_regular(v) for k, v in d.items()}
+      return d
 
 def check_component_exists(config, component):
     ''' Check if we have any test cases for the component'''
