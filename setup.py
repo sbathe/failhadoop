@@ -6,8 +6,8 @@ setup(
     packages=['failhadoop'],
     scripts=['bin/fail.py', 'bin/get_diff.py', 'bin/restart_services.py', 'bin/update_configs.py'],
     data_files=[
-                ('conf', ['conf/ansible.cfg','conf/sbathe.json','conf/ss.json']),
-                ('docs', ['conf/postdata.json'])
+                ('etc/failhadoop', ['conf/ansible.cfg','conf/sbathe.json','conf/ss.json']),
+                ('docs/failhadoop', ['conf/postdata.json'])
                ],
     url='https://github.com/sbathehwx/failhadoop',
     license='Apache Licence 2.0',
