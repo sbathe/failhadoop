@@ -6,3 +6,6 @@ MANIFEST
 build/
 dist/
 inventory/
+config.json
+failhadoop/notes
+test-notes.py
