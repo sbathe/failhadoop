@@ -18,6 +18,9 @@ from failhadoop import utils
 #     pass through it
 # - Make a more featureful inventory with host args and child groups for
 # clusters
+STOP_ALL='{"RequestInfo":{"context":"_PARSE_.STOP.ALL_SERVICES","operation_level":{"level":"CLUSTER","cluster_name":"sbathe-hdp"}},"Body":{"ServiceInfo":{"state":"INSTALLED"}}}'
+START_ALL='{"RequestInfo":{"context":"_PARSE_.START.ALL_SERVICES","operation_level":{"level":"CLUSTER","cluster_name":"sbathe-hdp"}},"Body":{"ServiceInfo":{"state":"STARTED"}}}'
+
 def load_config(config_file="config.json"):
     """
     Read the given file to build configuration, the configuration needs to be
@@ -85,6 +88,10 @@ def setup_ambari_session(config):
                       parameters"
     return(s)
 
+# TODO: Add Support for multiple clusters in an Ambari instance. This works now
+# cause we assume Ambari manages only one cluster per instance
+# Maybe all we need to do is to pass a list and let downstream handle how it
+# wants to iterate
 def get_clusters(config, ambari_session):
     '''
     Returns the cluster managed by Ambari. Will need to refactor once Ambari
@@ -214,10 +221,46 @@ def restart_stale_configs(config, cluster, session):
     r = session.post(post_uri,data=json.dumps(post_data))
     return r
 
-def get_request_status(config, cluster, session, requestid):
+def put_to_ambari(session, url, put_data):
+    print('Calling {0} with {1} as data'.format(url,put_data))
+    r = session.put(url, data=put_data)
+    return r
+
+def get_from_ambari(session, url):
+    r = session.get(url)
+    return r
+
+def stop_all(config, cluster, session):
     ambari_url = config['ambari']['protocol'] + '://' +\
        config['ambari']['host'] + ':' + config['ambari']['port']
-    uri = ambari_url +\
-          '/api/v1/clusters/{0}/requests/{1}'.format(cluster,requestid)
-    r = session.get(uri)
+    put_url = ambari_url + '/api/v1/clusters/{0}/services'.format(cluster)
+    print('Calling {0} with {1} as data'.format(put_url,STOP_ALL))
+    r = put_to_ambari(session,put_url,STOP_ALL)
     return r
+
+def start_all(config, cluster, session):
+    ambari_url = config['ambari']['protocol'] + '://' +\
+       config['ambari']['host'] + ':' + config['ambari']['port']
+    put_url = ambari_url + '/api/v1/clusters/{0}/services'.format(cluster)
+    r = put_to_ambari(session,put_url,START_ALL)
+    return r
+
+# Can be optimized by using subqueries or by requesting specifc fields from
+# Amabri
+def monitor_ambari_request(session, url):
+    completed = ['COMPLETED','FAILED','TIMEDOUT','ABORTED']
+    status_codes = [200,201, 202]
+    task_complete = 0
+    while True:
+      r = get_from_ambari(session, url)
+      status_code = r.status_code
+      state = r.json()['Requests']['request_status']
+      print(status_code, state)
+      if (status_code in status_codes) and (state not in completed):
+        time.sleep(10)
+        print('sleeping')
+        continue
+      else:
+        if r.json()['Requests']['request_status'] != 'COMPLETED':
+          return(False, r.json())
+        return(True,r.json())

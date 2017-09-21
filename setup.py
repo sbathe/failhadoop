@@ -4,7 +4,7 @@ setup(
     name='failhadoop',
     version='0.1.0',
     packages=['failhadoop'],
-    scripts=['bin/fail.py', 'bin/get_diff.py', 'bin/restart_services.py', 'bin/update_configs.py'],
+    scripts=['bin/fail.py', 'bin/get_diff.py', 'bin/restart_services.py', 'bin/update_configs.py', 'bin/restart_all_services.py'],
     data_files=[
                 ('etc/failhadoop', ['conf/ansible.cfg','conf/sbathe.json','conf/ss.json']),
                 ('docs/failhadoop', ['conf/postdata.json'])
