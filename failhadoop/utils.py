@@ -2,6 +2,7 @@
 import sys
 import json, yaml, os, sys
 from collections import defaultdict
+import random
 
 def load_config(args):
     """
@@ -80,3 +81,8 @@ def get_test_script(config, component, testnumber):
        if os.path.exists(os.path.join(targetdir, f)):
            return (True, f)
    return(False)
+
+def return_random_item(dictionary):
+    c = random.choice(dictionary.keys())
+    n = random.choice(dictionary[c])
+    return (c,n)
