@@ -16,20 +16,32 @@ config = failhadoop.utils.load_config(args)
 s = failhadoop.ambari_helpers.setup_ambari_session(config)
 cluster = failhadoop.ambari_helpers.get_clusters(config,s)
 
+print('Restarting services, this may take a long time')
 # stop all services on the given cluster
 r = failhadoop.ambari_helpers.stop_all(config,cluster,s)
-request_url = r.json()['href']
-#Monitor the stop, we will stay in the loop till the services are stopped. This
-#may take a long time
-print('Restarting services, this may take a long time')
-a = failhadoop.ambari_helpers.monitor_ambari_request(s,req)
-if a[0]:
-    print('Services Stopped, will wait for a minute before starting them again')
-    time.sleep(60)
+if r.status_code == 200 and not r.content:
+    print('Looks like services are already stopped')
 else:
-    print('Stop all failed. Please check Ambari.\n{0}'.format(a[1]))
+    request_url = r.json()['href']
+    #Monitor the stop, we will stay in the loop till the services are stopped. This
+    #may take a long time
+    a = failhadoop.ambari_helpers.monitor_ambari_request(s,request_url)
 
+    if a[0]:
+        print('Services Stopped, will wait for a minute before starting them again')
+        time.sleep(60)
+    else:
+        print('Stop all failed. Please check Ambari.\n{0}'.format(a[1]))
+
+#Start all services
 r = failhadoop.ambari_helpers.start_all(config,cluster,s)
+if r.status_code == 200 and not r.content:
+    print('Looks like services are already started')
+else:
+    request_url = r.json()['href']
+    #Monitor the request, we will stay in the loop till the services are started. This
+    #may take a long time
+    a = failhadoop.ambari_helpers.monitor_ambari_request(s,request_url)
 if a[0]:
     print('Services Started, all yours')
 else:

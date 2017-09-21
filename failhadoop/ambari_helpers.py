@@ -222,7 +222,7 @@ def restart_stale_configs(config, cluster, session):
     return r
 
 def put_to_ambari(session, url, put_data):
-    print('Calling {0} with {1} as data'.format(url,put_data))
+    #print('Calling {0} with {1} as data'.format(url,put_data))
     r = session.put(url, data=put_data)
     return r
 
@@ -234,7 +234,7 @@ def stop_all(config, cluster, session):
     ambari_url = config['ambari']['protocol'] + '://' +\
        config['ambari']['host'] + ':' + config['ambari']['port']
     put_url = ambari_url + '/api/v1/clusters/{0}/services'.format(cluster)
-    print('Calling {0} with {1} as data'.format(put_url,STOP_ALL))
+    #print('Calling {0} with {1} as data'.format(put_url,STOP_ALL))
     r = put_to_ambari(session,put_url,STOP_ALL)
     return r
 
@@ -255,7 +255,7 @@ def monitor_ambari_request(session, url):
       r = get_from_ambari(session, url)
       status_code = r.status_code
       state = r.json()['Requests']['request_status']
-      print(status_code, state)
+    #  print(status_code, state)
       if (status_code in status_codes) and (state not in completed):
         time.sleep(10)
         print('sleeping')
