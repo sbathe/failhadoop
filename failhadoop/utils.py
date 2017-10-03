@@ -83,7 +83,7 @@ def get_test_script(config, component, testnumber):
    return(False)
 
 def return_random_item(dictionary):
-    c = random.choice(dictionary.keys())
+    c = random.choice(list(dictionary.keys()))
     n = random.choice(dictionary[c])
     return (c,n)
 

@@ -22,13 +22,24 @@ parser.add_argument("-i", "--inventory-dir", action="store", default='/tmp/inven
                     help="localtion of the ansible inventory")
 parser.add_argument("--testcase-root", action="store", default=os.path.join(os.path.expanduser("~"),'repos/Hadoop-Failures'), dest='testcaseroot', help="location of the hadoop failure repository")
 parser.add_argument("--ssh-key", action="store", default=os.path.join(os.path.expanduser("~"),'.ssh/id_rsa'), dest='ssh_key', help="location of the ssh private key used by ansible to ssh")
-reqargs = parser.add_argument_group('required arguments')
-reqargs.add_argument("--service", action="store", dest='service',
-                    help="service to run test case against", required=True)
-reqargs.add_argument("--testnumber", action="store", dest='testno',
-                    help="Component test case number to run",required=True)
+parser.add_argument("--service", action="store", dest='service',
+                    help="service to run test case against")
+parser.add_argument("--testnumber", action="store", dest='testno',
+                    help="Component test case number to run")
+parser.add_argument("--random", action="store", dest='random',
+                    help="Generate a random test case component and number")
 args = parser.parse_args()
 verbose = args.verbose
+
+def sanitize_args(args):
+    '''Need to write our own, argparse is not flexible enough'''
+    if (args.service and args.testno) or args.random:
+        pass
+    else:
+        print('Please specify the service and testcase number or ask me
+              generate that at random (--service and --testnumber, or
+              --random)')
+        sys.exit(2)
 
 def load_config(args, conf='config.json'):
     """
@@ -92,9 +103,13 @@ def get_test_script(config, component, testnumber):
    return(False)
 
 # Here starts the main execution
+sanitize_args(args)
 config = load_config(args)
-component = args.service
-testno = args.testno
+if args.service and args.testno:
+  component = args.service
+  testno = args.testno
+else:
+    component, testno = failhadoop.utils.return_random_testcase(config['testcaseroot'])
 
 if not check_component_exists(config, component):
     print("Cannot find {0} in {1}".format(component.upper(),
