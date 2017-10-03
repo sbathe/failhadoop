@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-import json, yaml, os, sys
+import json, yaml, os, sys, re
 from collections import defaultdict
 import random
 
@@ -86,3 +86,12 @@ def return_random_item(dictionary):
     c = random.choice(dictionary.keys())
     n = random.choice(dictionary[c])
     return (c,n)
+
+def return_random_testcase(dirname):
+    m = defaultdict(list)
+    search = re.compile('action*')
+    for root, dirs, files in os.walk(dirname):
+        if filter(search.match, files):
+           c, n = root.split('/')[-2:]
+           m[c].append(n)
+    return return_random_item(m)
