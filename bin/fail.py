@@ -92,6 +92,7 @@ def load_testconfig(config,component,testnumber):
         testconfig = json.load(conf)
       return testconfig
     except:
+        print('Cannot load testconfig')
         return None
 
 def get_test_script(config, component, testnumber):
