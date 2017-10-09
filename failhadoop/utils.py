@@ -91,7 +91,9 @@ def return_random_testcase(dirname):
     m = defaultdict(list)
     search = re.compile('action*')
     for root, dirs, files in os.walk(dirname):
-        if filter(search.match, files):
-           c, n = root.split('/')[-2:]
-           m[c].append(n)
-    return return_random_item(m)
+        for f in files:
+            if search.match(f):
+                c, n = root.split('/')[-2:]
+                m[c].append(n)
+    n = defaultdict_to_regular(m)
+    return return_random_item(n)

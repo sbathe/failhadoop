@@ -16,6 +16,8 @@ TODO:
 parser = argparse.ArgumentParser()
 parser.add_argument("-v", action="store_true", default=False, dest='verbose',
                     help="increase output verbosity")
+parser.add_argument("-d","--dry-run", action="store_true", default=False, dest='dry',
+                    help="increase output verbosity")
 parser.add_argument("-c", "--config", action="store", default='config.json', dest='conf',
                     help="config file to load, should be json")
 parser.add_argument("-i", "--inventory-dir", action="store", default='/tmp/inventory', dest='inventory_dir',
@@ -26,19 +28,19 @@ parser.add_argument("--service", action="store", dest='service',
                     help="service to run test case against")
 parser.add_argument("--testnumber", action="store", dest='testno',
                     help="Component test case number to run")
-parser.add_argument("--random", action="store", dest='random',
+parser.add_argument("--random", action="store_true", dest='random',
                     help="Generate a random test case component and number")
 args = parser.parse_args()
 verbose = args.verbose
+dry = args.dry
 
 def sanitize_args(args):
     '''Need to write our own, argparse is not flexible enough'''
     if (args.service and args.testno) or args.random:
         pass
     else:
-        print('Please specify the service and testcase number or ask me
-              generate that at random (--service and --testnumber, or
-              --random)')
+        print('Please specify the service and testcase number or ask me to\
+              generate that at random (--service and --testnumber, or --random)')
         sys.exit(2)
 
 def load_config(args, conf='config.json'):
@@ -110,6 +112,10 @@ if args.service and args.testno:
   testno = args.testno
 else:
     component, testno = failhadoop.utils.return_random_testcase(config['testcaseroot'])
+    print("{0}, {1}".format(component, testno))
+
+if dry:
+    print('Dry run, will not run the test')
 
 if not check_component_exists(config, component):
     print("Cannot find {0} in {1}".format(component.upper(),
@@ -121,7 +127,7 @@ if not check_testcase_exists(config,component,testno):
     sys.exit(1)
 
 script = get_test_script(config, component, testno)
-if verbose:
+if script and verbose:
   print(script)
   print(script[1][-3:])
 
@@ -137,12 +143,22 @@ config['config_file'] = args.conf if args.conf else 'config.json'
 config.update(testconfig)
 if testconfig:
     if (testconfig['mode'] == 'ansible' and script[1][-3:] == 'yml'):
+        if dry:
+            print("Will running playbook: {0} on the remote hosts".format(script[1]))
+            print("Will call run_playbook with args {0}, {1}, {2}".format(config['inventory_dir'],[os.path.join(scriptdir,
+                                                             script[1])], config))
+            sys.exit(0)
+
         if verbose:
             print("Running playbook: {0} on the remote hosts".format(script[1]))
             print("calling run_playbook with args {0}, {1}, {2}".format(config['inventory_dir'],[os.path.join(scriptdir,
                                                              script[1])], config))
         results = failhadoop.ansible_helpers.run_playbook(config['inventory_dir'],[os.path.join(scriptdir,script[1])],config)
     else:
+        if dry:
+            print("Will Run script: {0} on the remote hosts".format(script[1]))
+            print("will call run_play")
+            sys.exit(0)
         if verbose:
             print("Running script: {0} on the remote hosts".format(script[1]))
             print("calling run_play")
