@@ -16,6 +16,19 @@ with open(cfg_file) as f:
 base_uri = '/failhadoop'
 app = flask.Flask(__name__)
 
+@app.route(base_uri, methods = ['GET'])
+def return_help():
+    help_text = '''
+    You have reached root of failures.</br>
+    /failhadoop/configs will tell you about the configs I hold</br>
+    /failhadoop/random will run a random failure on the default cluster</br>
+    /failhadoop/{config}/{cluster}/random will run a random failure on the
+    specific cluster</br>
+    /failhadoop/{config}/{cluster}/{service}/{testnumber} will run the
+    specified test on the specified config and cluster</br>
+    '''
+    return help_text, 200
+
 @app.route(base_uri + '/random', methods = ['GET'])
 def run_random_failure():
     cmd = ['fail.py',
