@@ -1,0 +1,27 @@
+<!doctype html>
+<title>FailHadoop</title>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+<div class=page>
+  <h1>FailHadoop</h1>
+  {% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+  {% endfor %}
+  {% block body %}
+  <ul class=entries>
+  <h2>Configs</h2>
+  {% for config in configs %}
+    <li><h3>{{ config }}</h3>
+  {% else %}
+    <li><em>Unbelievable. No configs here so far</em>
+  {% endfor %}
+  </ul>
+  <ul class=entries>
+  {% for key, value in service_dict.items() %}
+  <h2>Available Test Cases</h2>
+  <li><h3>{{  key }}: {{ value }}</h3>
+  {% else %}
+    <li><em>Unbelievable. No configs here so far</em>
+  {% endfor %}
+  </ul>
+  {% endblock %}
+</div>

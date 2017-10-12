@@ -1,6 +1,6 @@
 #!/usr/local/bin/python3
 
-import os, sys, json, flask, requests
+import os, sys, json, flask, requests, glob
 import failhadoop
 import subprocess
 
@@ -28,6 +28,15 @@ def return_help():
     specified test on the specified config and cluster</br>
     '''
     return help_text, 200
+
+@app.route(base_uri + '/configs', methods = ['GET'])
+def return_configs_and_clusters():
+    service_dict = failhadoop.utils.return_testcase_dict(flask_conf['testcase_root'])
+    confs = glob.glob(flask_conf['failhadoop_config_root']+'/*.json')
+    #print vars(configs)
+    response = flask.make_response(flask.render_template('show_configs.html', configs=confs,
+                                 service_dict=service_dict))
+    return response
 
 @app.route(base_uri + '/random', methods = ['GET'])
 def run_random_failure():
