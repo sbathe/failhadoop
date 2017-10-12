@@ -16,8 +16,8 @@
   {% endfor %}
   </ul>
   <ul class=entries>
-  {% for key, value in service_dict.items() %}
   <h2>Available Test Cases</h2>
+  {% for key, value in service_dict.items() %}
   <li><h3>{{  key }}: {{ value }}</h3>
   {% else %}
     <li><em>Unbelievable. No configs here so far</em>
