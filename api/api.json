@@ -1,0 +1,6 @@
+{
+  "failhadoop_config_root": "/etc/failhadoop/",
+  "inventory_dir": "/etc/failhadoop/inventory",
+  "dry-run": true,
+  "testcase_root": "/home/sbathe/Hadoop-Failures/"
+}

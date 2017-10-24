@@ -1,20 +1,48 @@
 #!/usr/local/bin/python3
 
+from __future__ import print_function
 import os, sys, json, flask, requests, glob
+from collections import defaultdict
 import failhadoop
 import subprocess
+import logging
+import logging.handlers
 
 # The config file for the API. It will contain a default cluster definition and
 # specification as well. Would be similar to the failhadoop config file
 # Minimum required:
 #    1 - Failhadoop config root
 #    2 - Testcase Root
-cfg_file = '/usr/local/etc/failhadoop/api.json'
+SYSTEM_LOG_FILENAME = 'api.log'
+cfg_file = 'api.json'
 with open(cfg_file) as f:
   flask_conf = json.load(f)
 
 base_uri = '/failhadoop'
 app = flask.Flask(__name__)
+if flask_conf['dry-run']:
+  print('Running in Dry Run mode', file=sys.stderr)
+else:
+  print('Running Live mode', file=sys.stderr)
+
+app.logger.setLevel(logging.DEBUG)  # use the native logger of flask
+app.logger.disabled = False
+handler = logging.handlers.RotatingFileHandler(
+    SYSTEM_LOG_FILENAME,
+    'a',
+    maxBytes=1024 * 1024 * 100,
+    backupCount=20
+    )
+
+formatter = logging.Formatter(\
+    "%(asctime)s - %(levelname)s - %(name)s: \t%(message)s")
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.DEBUG)
+log.addHandler(handler)
+
 
 @app.route(base_uri, methods = ['GET'])
 def return_help():
@@ -33,16 +61,25 @@ def return_help():
 def return_configs_and_clusters():
     service_dict = failhadoop.utils.return_testcase_dict(flask_conf['testcase_root'])
     confs = glob.glob(flask_conf['failhadoop_config_root']+'/*.json')
+    print('Confs: {0}'.format(confs), file=sys.stderr)
+    conf_dict = defaultdict(list)
+    for c in confs:
+        ac = failhadoop.ambari_helpers.load_config(c)
+        ambari_session = failhadoop.ambari_helpers.setup_ambari_session(ac)
+        clusters = failhadoop.ambari_helpers.get_clusters(ac, ambari_session)
+        conf_dict[c].append(clusters)
     #print vars(configs)
-    response = flask.make_response(flask.render_template('show_configs.html', configs=confs,
-                                 service_dict=service_dict))
-    return response
+    print('conf_dict: {0}'.format(conf_dict))
+    return flask.render_template('show_configs.html', conf_dict=conf_dict,
+                                 service_dict=service_dict)
 
 @app.route(base_uri + '/random', methods = ['GET'])
 def run_random_failure():
     cmd = ['fail.py',
            '-c','/usr/local/etc/failhadoop/supportOsp.json','-i','/usr/local/etc/failhadoop/inventory/','--testcase-root',
-           '~/repos/Hadoop-Failures','-v','--random', '--dry-run']
+           '~/repos/Hadoop-Failures','-v','--random']
+    if flask_conf['dry-run']:
+        cmd.append('--dry-run')
     p = subprocess.Popen(cmd,stdout =
                          subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE)
     out, err = p.communicate()
@@ -59,8 +96,9 @@ def run_random_failure_on_cluster(config, cluster):
 
     cmd = ['fail.py',
            '-c','{0}/{1}.json'.format(d,config),'-i','{0}/inventory/'.format(d),'--testcase-root',
-           '{0}'.format(flask_conf['testcase_root']),'-v','--random',
-           '--dry-run']
+           '{0}'.format(flask_conf['testcase_root']),'-v','--random']
+    if flask_conf['dry-run']:
+        cmd.append('--dry-run')
     p = subprocess.Popen(cmd,stdout =
                          subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE)
     out, err = p.communicate()
@@ -78,8 +116,9 @@ def run_failure_on_cluster(config, cluster, service, testnumber):
     cmd = ['fail.py',
            '-c','{0}/{1}.json'.format(d,config),'-i','{0}/inventory/'.format(d),'--testcase-root',
            '{0}'.format(flask_conf['testcase_root']),'-v','--service',service,
-           '--testnumber', testnumber,
-           '--dry-run']
+           '--testnumber', testnumber ]
+    if flask_conf['dry-run']:
+        cmd.append('--dry-run')
     p = subprocess.Popen(cmd,stdout =
                          subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE)
     out, err = p.communicate()
@@ -87,4 +126,4 @@ def run_failure_on_cluster(config, cluster, service, testnumber):
 
 if __name__ == '__main__':
   debug = True
-  app.run(debug=debug)
+  app.run(host='0.0.0.0', debug=debug)

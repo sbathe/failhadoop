@@ -9,8 +9,9 @@
   {% block body %}
   <ul class=entries>
   <h2>Configs</h2>
-  {% for config in configs %}
-    <li><h3>{{ config }}</h3>
+  {% for key, value in conf_dict.items() %}
+  <li><h3>{{ key }}</h3></li>
+  <li><h4>{{ ', '.join(value) }}</h4></li>
   {% else %}
     <li><em>Unbelievable. No configs here so far</em>
   {% endfor %}
@@ -18,7 +19,7 @@
   <ul class=entries>
   <h2>Available Test Cases</h2>
   {% for key, value in service_dict.items() %}
-  <li><h3>{{  key }}: {{ value }}</h3>
+  <li><h3>{{  key }}: {{ ', '.join(value) }}</h3>
   {% else %}
     <li><em>Unbelievable. No configs here so far</em>
   {% endfor %}
