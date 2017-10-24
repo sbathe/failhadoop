@@ -1,0 +1,15 @@
+[Unit]
+Description=Web hooks for FailHadoop self-service
+After=network.target
+
+[Service]
+User=sbathe
+Group=sbathe
+WorkingDirectory=/home/sbathe/failhadoop/api
+#Environment="PATH=/var/www/fk/venv/bin"
+#ExecStart=/var/www/fk/venv/bin/uwsgi --ini fk.ini
+ExecStart=/usr/bin/python /home/sbathe/failhadoop/api/api.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
