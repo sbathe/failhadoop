@@ -20,10 +20,6 @@ with open(cfg_file) as f:
 
 base_uri = '/failhadoop'
 app = flask.Flask(__name__)
-if flask_conf['dry-run']:
-  print('Running in Dry Run mode', file=sys.stderr)
-else:
-  print('Running Live mode', file=sys.stderr)
 
 app.logger.setLevel(logging.DEBUG)  # use the native logger of flask
 app.logger.disabled = False
@@ -43,6 +39,10 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.DEBUG)
 log.addHandler(handler)
 
+if flask_conf['dry-run']:
+  app.logger.info('Running in Dry Run mode')
+else:
+  app.logger.info('Running Live mode')
 
 @app.route(base_uri, methods = ['GET'])
 def return_help():
