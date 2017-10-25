@@ -6,8 +6,6 @@ After=network.target
 User=sbathe
 Group=sbathe
 WorkingDirectory=/home/sbathe/failhadoop/api
-#Environment="PATH=/var/www/fk/venv/bin"
-#ExecStart=/var/www/fk/venv/bin/uwsgi --ini fk.ini
 ExecStart=/usr/bin/python /home/sbathe/failhadoop/api/api.py
 Restart=always
 
