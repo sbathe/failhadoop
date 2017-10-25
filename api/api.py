@@ -21,29 +21,6 @@ with open(cfg_file) as f:
 base_uri = '/failhadoop'
 app = flask.Flask(__name__)
 
-app.logger.setLevel(logging.DEBUG)  # use the native logger of flask
-app.logger.disabled = False
-handler = logging.handlers.RotatingFileHandler(
-    SYSTEM_LOG_FILENAME,
-    'a',
-    maxBytes=1024 * 1024 * 100,
-    backupCount=20
-    )
-
-formatter = logging.Formatter(\
-    "%(asctime)s - %(levelname)s - %(name)s: \t%(message)s")
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
-
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.DEBUG)
-log.addHandler(handler)
-
-if flask_conf['dry-run']:
-  app.logger.info('Running in Dry Run mode')
-else:
-  app.logger.info('Running Live mode')
-
 @app.route(base_uri, methods = ['GET'])
 def return_help():
     help_text = '''
@@ -75,15 +52,16 @@ def return_configs_and_clusters():
 
 @app.route(base_uri + '/random', methods = ['GET'])
 def run_random_failure():
+    msg=dict()
     cmd = ['fail.py',
-           '-c','/usr/local/etc/failhadoop/supportOsp.json','-i','/usr/local/etc/failhadoop/inventory/','--testcase-root',
-           '~/repos/Hadoop-Failures','-v','--random']
+           '-c','/etc/failhadoop/supportOsp.json','-i','/etc/failhadoop/inventory/','--testcase-root',
+           '/home/sbathe/Hadoop-Failures','-v','--random']
     if flask_conf['dry-run']:
         cmd.append('--dry-run')
     p = subprocess.Popen(cmd,stdout =
                          subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE)
-    out, err = p.communicate()
-    return out
+    msg[0], msg[1] = p.communicate()
+    return flask.jsonify(msg)
 
 @app.route(base_uri + '/<config>/<cluster>/random', methods = ['GET'])
 def run_random_failure_on_cluster(config, cluster):
@@ -125,5 +103,25 @@ def run_failure_on_cluster(config, cluster, service, testnumber):
     return out
 
 if __name__ == '__main__':
-  debug = True
-  app.run(host='0.0.0.0', debug=debug)
+    debug = True
+    app.logger.setLevel(logging.DEBUG)  # use the native logger of flask
+    app.logger.disabled = False
+    handler = logging.handlers.RotatingFileHandler(
+        SYSTEM_LOG_FILENAME, 'a',
+        maxBytes=1024 * 1024 * 100,
+        backupCount=20
+        )
+    formatter = logging.Formatter(\
+        "%(asctime)s - %(levelname)s - %(name)s: \t%(message)s")
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
+
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.DEBUG)
+    log.addHandler(handler)
+
+    if flask_conf['dry-run']:
+      app.logger.info('Running in Dry Run mode')
+    else:
+      app.logger.info('Running Live mode')
+    app.run(host='0.0.0.0', debug=debug)
