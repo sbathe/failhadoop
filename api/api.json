@@ -1,6 +1,8 @@
 {
-  "failhadoop_config_root": "/etc/failhadoop/",
-  "inventory_dir": "/etc/failhadoop/inventory",
+  "failhadoop_config_root": "/usr/local/etc/failhadoop/",
+  "failhadoop_default_config": "supportOsp",
+  "failhadoop_default_cluster": "sbathe-hdp",
+  "inventory_dir": "/usr/local/etc/failhadoop/inventory",
   "dry-run": true,
-  "testcase_root": "/home/sbathe/Hadoop-Failures/"
+  "testcase_root": "/Users/sbathe/repos/Hadoop-Failures/"
 }

@@ -9,3 +9,4 @@ inventory/
 config.json
 failhadoop/notes
 test-notes.py
+api.log
