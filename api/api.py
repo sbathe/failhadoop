@@ -32,6 +32,7 @@ app = flask.Flask(__name__)
 
 def run_test(flask_conf, cluster_config=flask_conf['failhadoop_default_config'],
              cluster=flask_conf['failhadoop_default_cluster'], component='random', testnumber=None):
+    lock = False
     conf_root = flask_conf['failhadoop_config_root']
     full_path = os.path.join(conf_root, cluster_config + '.json')
     if not os.path.exists(full_path):
@@ -71,6 +72,11 @@ def return_help():
     specific cluster</br>
     /failhadoop/{config}/{cluster}/{service}/{testnumber} will run the
     specified test on the specified config and cluster</br>
+    /failhadoop/get-locks will tell you which clusters are locked and since
+    when. The times are in UTC</br>
+    /failhadoop/{cluster}/clear-lock will clear the lock for that cluster. <b>Use
+    with caution</b>, you can disturb a test run by someone else and may make the
+    cluster unusable</br>
     '''
     return help_text, 200
 
@@ -112,7 +118,7 @@ def run_random_failure():
 
 @app.route(base_uri + '/<config>/<cluster>/random', methods = ['GET'])
 def run_random_failure_on_cluster(config, cluster):
-    msg = run_test(flask_conf, config, cluster) 
+    msg = run_test(flask_conf, config, cluster)
     return flask.jsonify(msg)
 
 @app.route(base_uri + '/<config>/<cluster>/<service>/<testnumber>', methods = ['GET'])
