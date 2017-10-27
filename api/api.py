@@ -89,6 +89,22 @@ def return_configs_and_clusters():
     return flask.render_template('show_configs.html', conf_dict=conf_dict,
                                  service_dict=service_dict)
 
+@app.route(base_uri + '/get-locks', methods = ['GET'])
+def get_locks():
+    data = dict()
+    data['locks'] = failhadoop.web_utils.read_lock(lockfile)
+    return flask.jsonify(data)
+
+@app.route(base_uri + '/<cluster>/clear-lock', methods = ['GET'])
+def release_cluster_lock(cluster):
+    msg = dict()
+    res = failhadoop.web_utils.release_cluster_lock(lockfile, cluster)
+    if res:
+        msg[0] = 'Cluster lock cleared'
+    else:
+        msg[0] = 'Could not clear lock for the cluster. Please contact your system admistrator to manually release the lock'
+    return flask.jsonify(msg)
+
 @app.route(base_uri + '/random', methods = ['GET'])
 def run_random_failure():
     msg = run_test(flask_conf)

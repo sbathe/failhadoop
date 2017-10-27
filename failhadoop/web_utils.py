@@ -26,5 +26,15 @@ def write_new_lock(lockfile, cluster, component, testnumber):
     with open(lockfile,'a') as lock:
         lock.write(line)
     return True
-    #except:
-    #    return False
+
+def release_cluster_lock(lockfile, cluster):
+        data = read_lock(lockfile)
+        for e in data:
+            if cluster in e.split(';'):
+                data.remove(e)
+        try:
+            with open(lockfile,'w') as lock:
+                lock.writelines(data)
+            return True
+        except:
+            return False
