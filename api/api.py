@@ -45,7 +45,9 @@ def run_test(flask_conf, cluster_config=flask_conf['failhadoop_default_config'],
            '-c','{0}/{1}.json'.format(conf_root,cluster_config),'-i','{0}/inventory/'.format(conf_root),'--testcase-root',
            '{0}'.format(flask_conf['testcase_root']),'-v']
     if component == 'random':
-        cmd.append('--random')
+        component, testnumber = failhadoop.utils.return_random_testcase(flask_conf['testcase_root'])
+    extra_args = ['--service', component, '--testnumber', testnumber]
+    cmd.extend(extra_args)
     if flask_conf['dry-run']:
         cmd.append('--dry-run')
     if lock:
