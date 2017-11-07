@@ -89,10 +89,11 @@ def return_random_item(dictionary):
 
 def return_testcase_dict(dirname):
     m = defaultdict(list)
-    search = re.compile('action*')
+    include = re.compile('action*')
+    ignore = re.compile('action.retry')
     for root, dirs, files in os.walk(dirname):
         for f in files:
-            if search.match(f):
+            if include.match(f) and not ignore.match(f):
                 c, n = root.split('/')[-2:]
                 m[c].append(n)
     return defaultdict_to_regular(m)

@@ -88,8 +88,16 @@ def return_configs_and_clusters():
     conf_dict = defaultdict(list)
     for c in confs:
         ac = failhadoop.ambari_helpers.load_config(c)
-        ambari_session = failhadoop.ambari_helpers.setup_ambari_session(ac)
-        clusters = failhadoop.ambari_helpers.get_clusters(ac, ambari_session)
+        try:
+          ambari_session = failhadoop.ambari_helpers.setup_ambari_session(ac)
+        except:
+            ambari_session = None
+            clusters = "None"
+        if ambari_session:
+          try:
+            clusters = failhadoop.ambari_helpers.get_clusters(ac, ambari_session)
+          except:
+            clusters = "None"
         conf_dict[c].append(clusters)
     print('conf_dict: {0}'.format(conf_dict))
     return flask.render_template('show_configs.html', conf_dict=conf_dict,
