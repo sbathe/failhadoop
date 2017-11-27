@@ -10,3 +10,6 @@ config.json
 failhadoop/notes
 test-notes.py
 api.log
+api.lock
+.vscode
+api/ansible_log*

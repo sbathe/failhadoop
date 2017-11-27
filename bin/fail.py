@@ -134,7 +134,8 @@ if script and verbose:
 
 if not script:
     if verbose:
-        print("There does not seem to any action.py or action.sh in {0}".format(os.path.join(config['testcaseroot'],component.upper(),testno)))
+        print("There does not seem to any action.py or action.sh or action.yml in {0}".format(
+                                          os.path.join(config['testcaseroot'],component.upper(),testno)))
         sys.exit(1)
 
 testconfig = load_testconfig(config,component,testno)
@@ -145,9 +146,9 @@ config.update(testconfig)
 if testconfig:
     if (testconfig['mode'] == 'ansible' and script[1][-3:] == 'yml'):
         if dry:
-            print("Will running playbook: {0} on the remote hosts".format(script[1]))
+            print("Will run playbook: {0} on the remote hosts".format(script[1]))
             print("Will call run_playbook with args {0}, {1}, {2}".format(config['inventory_dir'],[os.path.join(scriptdir,
-                                                             script[1])], config))
+                                                                          script[1])], config))
             sys.exit(0)
 
         if verbose:
@@ -163,10 +164,12 @@ if testconfig:
         if verbose:
             print("Running script: {0} on the remote hosts".format(script[1]))
             print("calling run_play")
-        results = failhadoop.ansible_helpers.run_play(config['inventory_dir'],testconfig['hostpattern'],os.path.join(scriptdir, script[1]),connection='ssh')
+        results = failhadoop.ansible_helpers.run_play(config['inventory_dir'],testconfig['hostpattern'],os.path.join(scriptdir,
+                    script[1]),connection='ssh')
 
     tqm = results[1]
     stats = tqm._stats
+    results[2][0]['summary'] = failhadoop.ansible_helpers.summarize_stats(stats)
     # Test if success for record_logs
     run_success = True
     hosts = sorted(stats.processed.keys())
@@ -176,6 +179,8 @@ if testconfig:
             run_success = False
 
     tqm.send_callback('default', success=run_success)
+    print(json.dumps(results[2],indent=2, sort_keys=True))
+    
 else:
     print("""There does not seem to any testconfig.json in {0}""".format(os.path.join(config['testcaseroot'],component.upper(),testno)))
     sys.exit(1)

@@ -75,7 +75,7 @@ def load_testconfig(config,component,testnumber):
 def get_test_script(config, component, testnumber):
    ''' Check if there is a action script and return the name of the script,
    action.sh or action.py'''
-   files = ['action.py', 'action.sh']
+   files = ['action.py', 'action.sh', 'action.yml']
    targetdir = os.path.join(config['testcaseroot'],component.upper(),testnumber)
    for f in files:
        if os.path.exists(os.path.join(targetdir, f)):
@@ -101,3 +101,29 @@ def return_testcase_dict(dirname):
 def return_random_testcase(dirname):
     n = return_testcase_dict(dirname)
     return return_random_item(n)
+
+def match_files(dirname, includes, excludes, clear_dirs):
+    files = list()
+    include = re.compile(includes)
+    ignore  = re.compile(excludes)
+    for root, dirs, files in os.walk(dirname):
+        for f in files:
+            if include.match(f) and not ignore.match(f):
+                files.append(os.path.join(root,f))
+        if clear_dirs:
+            dirs = list()
+    return files
+
+def check_for_playbook(dirname):
+    playbook = match_files(dirname,'action.yml','action.retry')
+    if script:
+        return (True, script[0])
+    else:
+        return(False)
+
+def check_for_script(dirname):
+    script = match_files(dirname,'action*','action.retry')
+    if script:
+        return(True,script[0])
+    else:
+        return(False)

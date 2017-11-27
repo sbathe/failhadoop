@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import os, sys, json, flask, requests, glob
+import time
 from collections import defaultdict
 import failhadoop
 import subprocess
@@ -44,7 +45,7 @@ def run_test(flask_conf, cluster_config=flask_conf['failhadoop_default_config'],
     app.logger.debug('{0}'.format(lock))
     cmd = ['fail.py',
            '-c','{0}/{1}.json'.format(conf_root,cluster_config),'-i','{0}/inventory/'.format(conf_root),'--testcase-root',
-           '{0}'.format(flask_conf['testcase_root']),'-v']
+           '{0}'.format(flask_conf['testcase_root'])]
     if component == 'random':
         component, testnumber = failhadoop.utils.return_random_testcase(flask_conf['testcase_root'])
     extra_args = ['--service', component, '--testnumber', testnumber]
@@ -52,15 +53,26 @@ def run_test(flask_conf, cluster_config=flask_conf['failhadoop_default_config'],
     if flask_conf['dry-run']:
         cmd.append('--dry-run')
     if lock:
-        msg[0] = 'Cannot run test. Cluster {0} is already in use\n\t\t{1}'.format(cluster,failhadoop.web_utils.get_lock_data(data,cluster))
+        msg['err'] = 'Cannot run test. Cluster {0} is already in use\n\t\t{1}'.format(cluster,failhadoop.web_utils.get_lock_data(data,cluster))
     else:
         if failhadoop.web_utils.write_new_lock(lockfile, cluster, component, testnumber):
           p = subprocess.Popen(cmd,stdout =
                            subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE)
-          msg[0], msg[1] = p.communicate()
+          msg['stdout'], msg['stderr'] = p.communicate()
         else:
-           msg[0] = 'Failed to write lock for the test'
-    return msg
+           msg['err'] = 'Failed to write lock for the test'
+    results = failhadoop.web_utils.file_ansible_logs(msg)
+    results['success'] = True
+    try:
+        results['summary'] = json.loads(msg['stdout'][msg['stdout'].find('\n{'):])['stats']
+        hosts = results['summary'].keys()
+        for h in hosts:
+            t = results['summary'][h]
+            if t['unreachable'] > 0 or t['failures'] > 0:
+              results['success'] = False
+    except:
+        pass
+    return results
 
 @app.route(base_uri, methods = ['GET'])
 def return_help():
@@ -135,8 +147,8 @@ def run_failure_on_cluster(config, cluster, service, testnumber):
     return flask.jsonify(msg)
 
 if __name__ == '__main__':
-    debug = True
-    app.logger.setLevel(logging.DEBUG)  # use the native logger of flask
+    debug = False
+    app.logger.setLevel(logging.INFO)  # use the native logger of flask
     app.logger.disabled = False
     handler = logging.handlers.RotatingFileHandler(
         SYSTEM_LOG_FILENAME, 'a',

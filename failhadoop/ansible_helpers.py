@@ -20,13 +20,16 @@ def run_playbook(inventory_root, playbook, extra_vars=None, connection='ssh', mo
                  become_method=None, become_user=None, check=False):
    # We need a way to pass options to Ansible. We do so by passing a tuple object
    # This is not a exhaustive list, we only do what we need
-   Options = namedtuple('Options', ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check', 'listhosts', 'listtasks', 'listtags', 'syntax'])
+   Options = namedtuple('Options', ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check', 
+                        'listhosts', 'listtasks', 'listtags', 'syntax'])
    # initialize needed objects
    stats = AggregateStats()
    variable_manager = VariableManager()
    variable_manager.extra_vars = extra_vars
    loader = DataLoader()
-   options = Options(connection=connection, module_path=module_path, forks=forks, become=become, become_method=become_method, become_user=become_user, check=check, listhosts=False, listtasks=False, listtags=False, syntax=False)
+   options = Options(connection=connection, module_path=module_path, forks=forks, become=become, 
+                     become_method=become_method, become_user=become_user, check=check, listhosts=False,
+                     listtasks=False, listtags=False, syntax=False)
    passwords = dict(vault_pass='secret') # this is required, for now would
    # mostly be junk for us
 
@@ -35,10 +38,11 @@ def run_playbook(inventory_root, playbook, extra_vars=None, connection='ssh', mo
    variable_manager.set_inventory(inventory)
    pbex = PlaybookExecutor(playbook, inventory=inventory, variable_manager=variable_manager, loader=loader,
                                 passwords=passwords, options = options)
-   result = pbex.run()
+   pbex._tqm._stdout_callback = 'json'
+   return_code = pbex.run()
+   results = pbex._tqm._stdout_callback.results
    tqm = pbex._tqm
-   return (result, tqm)
-
+   return (return_code, tqm, results)
 
 def run_play(inventory_root,host_pattern,script, connection='ssh',module_path=None, forks=5, become=None,
                   become_method=None, become_user=None, check=False):
@@ -49,7 +53,8 @@ def run_play(inventory_root,host_pattern,script, connection='ssh',module_path=No
       stats = AggregateStats()
       variable_manager = VariableManager()
       loader = DataLoader()
-      options = Options(connection=connection, module_path=module_path, forks=forks, become=become, become_method=become_method, become_user=become_user, check=check)
+      options = Options(connection=connection, module_path=module_path, forks=forks, become=become, become_method=become_method,
+                        become_user=become_user, check=check)
       passwords = dict(vault_pass='secret') # this is required, for now would
       # mostly be junk for us
 
@@ -79,11 +84,20 @@ def run_play(inventory_root,host_pattern,script, connection='ssh',module_path=No
                   loader=loader,
                   options=options,
                   passwords=passwords,
-                  stdout_callback='default'
+                  stdout_callback='json'
               )
-        result = tqm.run(play)
+        return_code = tqm.run(play)
+        results = tqm._stdout_callback.results
       finally:
         if tqm is not None:
             tqm.cleanup()
-      return (result, tqm)
+      return (return_code, tqm, results)
+
+def summarize_stats(stats):
+  hosts = sorted(stats.processed.keys())
+  summary = {}
+  for h in hosts:
+      s = stats.summarize(h)
+      summary[h] = s
+  return summary
 
