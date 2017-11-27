@@ -3,6 +3,7 @@ import sys
 import json, yaml, os, sys, re
 from collections import defaultdict
 import random, time
+import failhadoop
 
 def read_lock(lockfile):
     with open(lockfile) as lock:
@@ -55,18 +56,16 @@ def file_ansible_logs(dictionary):
 
 def file_ansible_logsv2(results):
     '''Takes in the results tuple from run_play and run_playbook and logs the results to a file'''
-    stats = results[1]._stats
-    summary = failhadoop.ansible_helpers.summarize_stats(stats)
-    results[2][0]['summary'] = failhadoop.ansible_helpers.summarize_stats(stats)
+    results[2][0]['summary'] = failhadoop.ansible_helpers.summarize_stats(results[1]._stats)
     ansible_log = 'ansible_log_' + time.strftime("%Y%m%d%H%M%s", time.localtime()) + '.log'
     results = dict()
 
     with open(ansible_log,'w') as asl:
         try:
             json.dump(results[2], asl, indent=2)
-            results['success'] = True
+            results['log_success'] = True
             results['msg'] = 'log written to: ' + ansible_log
         except:
-            results['success'] = False
+            results['log_success'] = False
             results['msg'] = 'Cannot write to: ' + ansible_log
     return results

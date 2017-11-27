@@ -9,7 +9,7 @@ import subprocess
 import logging
 import logging.handlers
 
-#TODO:  /random is right now hardcoded. Make it configurable / generic
+#fixme: /random is right now hardcoded. Make it configurable / generic
 
 # The config file for the API. It will contain a default cluster definition and
 # specification as well. Would be similar to the failhadoop config file
@@ -40,9 +40,9 @@ def run_test(flask_conf, cluster_config=flask_conf['failhadoop_default_config'],
         return "Required config file {0} in the URL is not on this server".format(full_path), 500
     msg = dict()
     data = failhadoop.web_utils.read_lock(lockfile)
-    app.logger.debug('Checking if cluster: {0} is in use. Data in file is {1}'.format(cluster,data))
+    app.logger.debug('Checking if cluster: %s is in use. Data in file is %s', cluster,data)
     lock = failhadoop.web_utils.check_lock(data,cluster)
-    app.logger.debug('{0}'.format(lock))
+    app.logger.debug('%s', lock)
     cmd = ['fail.py',
            '-c','{0}/{1}.json'.format(conf_root,cluster_config),'-i','{0}/inventory/'.format(conf_root),'--testcase-root',
            '{0}'.format(flask_conf['testcase_root'])]
