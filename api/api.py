@@ -146,6 +146,25 @@ def run_failure_on_cluster(config, cluster, service, testnumber):
     msg = run_test(flask_conf, config, cluster, service, testnumber)
     return flask.jsonify(msg)
 
+@app.route('/failhadoop/add-ambari/<name>',methods=['POST'])
+def add_ambari(name):
+    ambari = flask.request.get_json(force=True)
+    failhadoop_config_root = flask_conf['failhadoop_config_root']
+    skeleton = json.load(open('skeleton.json'))
+    skeleton.update(ambari)
+    new_conf_path = os.path.join(failhadoop_config_root, name + '.json')
+    with open(new_conf_path, 'w') as new_conf:
+        json.dump(skeleton, new_conf, indent=2)
+    app.logger.info('Got ambari config: {0}'.format(ambari))
+    return 'Upload done', 200
+
+@app.route('/failhadoop/remove-ambari/<name>',methods=['POST'])
+def remove_ambari(name):
+    failhadoop_config_root = flask_conf['failhadoop_config_root']
+    c = os.path.join(failhadoop_config_root, name + '.json')
+    os.remove(c)
+    return 'config removed: {0}'.format(name), 200
+
 if __name__ == '__main__':
     debug = False
     app.logger.setLevel(logging.INFO)  # use the native logger of flask
