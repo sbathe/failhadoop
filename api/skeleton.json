@@ -1,0 +1,6 @@
+{
+  "ssh.key": "/Users/sbathe/.ssh/sbathe-rackspace.pem",
+  "failhadooproot": "/Users/sbathe/repos/failhadoop/",
+  "inventory_dir": "/Users/sbathe/repos/failhadoop/inventory",
+  "testcaseroot": "/Users/sbathe/repos/Hadoop-Failures/" 
+}
