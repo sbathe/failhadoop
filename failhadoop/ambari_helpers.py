@@ -125,9 +125,9 @@ def update_component_config(config, cluster, ambari_session, config_element, new
     ambari_url = config['ambari']['protocol'] + '://' + config['ambari']['host'] + ':' + config['ambari']['port']
     # Manipulate the new_element_config
     new_element_config['tag'] = 'version' + str(round(time.time()))
-    del new_element_config['Config']
-    del new_element_config['href']
-    del new_element_config['version']
+    new_element_config.pop('Config', None)
+    new_element_config.pop('href', None)
+    new_element_config.pop('version', None)
     new_element_config = {"Clusters": {"desired_config": new_element_config}}
     body = new_element_config
     r = ambari_session.put(ambari_url + '/api/v1/clusters/' + cluster, data=json.dumps(body))
