@@ -87,7 +87,7 @@ def return_random_item(dictionary):
     n = random.choice(dictionary[c])
     return (c,n)
 
-def return_testcase_dict(dirname):
+def return_testcase_dict(dirname, ignore_list = []):
     m = defaultdict(list)
     include = re.compile('action*')
     ignore = re.compile('action.retry')
@@ -96,7 +96,10 @@ def return_testcase_dict(dirname):
             if include.match(f) and not ignore.match(f):
                 c, n = root.split('/')[-2:]
                 m[c].append(n)
-    return defaultdict_to_regular(m)
+    d = defaultdict_to_regular(m)
+    if ignore_list:
+      [d.pop(i) for i in l if i in list(d.keys())]
+    return d
 
 def return_random_testcase(dirname):
     n = return_testcase_dict(dirname)

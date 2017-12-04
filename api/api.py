@@ -94,7 +94,8 @@ def return_help():
 
 @app.route(base_uri + '/configs', methods = ['GET'])
 def return_configs_and_clusters():
-    service_dict = failhadoop.utils.return_testcase_dict(flask_conf['testcase_root'])
+    ignore_list = flask_conf['ignore_services'] if 'ignore_services' in flask_conf.keys() else []
+    service_dict = failhadoop.utils.return_testcase_dict(flask_conf['testcase_root'], ignore_list)
     confs = glob.glob(flask_conf['failhadoop_config_root']+'/*.json')
     app.logger.debug('Confs: {0}'.format(confs))
     conf_dict = defaultdict(list)
