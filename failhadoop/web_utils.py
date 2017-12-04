@@ -10,28 +10,28 @@ def read_lock(lockfile):
         data = lock.readlines()
     return data
 
-def check_lock(data, cluster):
+def check_lock(data, config, cluster):
     for e in data:
-        if cluster in e.split(';'):
+        if cluster in e.split(';') and config in e.split(';'):
             return (True)
     return (False)
 
-def get_lock_data(data, cluster):
+def get_lock_data(data, config, cluster):
     for e in data:
-        if cluster in e.split(';'):
+        if cluster in e.split(';') and config in e.split(';'):
             return e
 
-def write_new_lock(lockfile, cluster, component, testnumber):
-    line = "{0};{1};{2};{3}\n".format(cluster,component,testnumber,time.strftime('%c',time.localtime()))
+def write_new_lock(lockfile, config, cluster, component, testnumber):
+    line = "{0};{1};{2};{3};{4}\n".format(config,cluster,component,testnumber,time.strftime('%c',time.localtime()))
     #try:
     with open(lockfile,'a') as lock:
         lock.write(line)
     return True
 
-def release_cluster_lock(lockfile, cluster):
+def release_cluster_lock(lockfile, config, cluster):
         data = read_lock(lockfile)
         for e in data:
-            if cluster in e.split(';'):
+            if cluster in e.split(';') and config in e.split(';'):
                 data.remove(e)
         try:
             with open(lockfile,'w') as lock:

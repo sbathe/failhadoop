@@ -41,7 +41,7 @@ def run_test(flask_conf, cluster_config=flask_conf['failhadoop_default_config'],
     msg = dict()
     data = failhadoop.web_utils.read_lock(lockfile)
     app.logger.debug('Checking if cluster: %s is in use. Data in file is %s', cluster,data)
-    lock = failhadoop.web_utils.check_lock(data,cluster)
+    lock = failhadoop.web_utils.check_lock(data,cluster_config,cluster)
     app.logger.debug('%s', lock)
     cmd = ['fail.py',
            '-c','{0}/{1}.json'.format(conf_root,cluster_config),'-i','{0}/inventory/'.format(conf_root),'--testcase-root',
@@ -53,9 +53,9 @@ def run_test(flask_conf, cluster_config=flask_conf['failhadoop_default_config'],
     if flask_conf['dry-run']:
         cmd.append('--dry-run')
     if lock:
-        msg['err'] = 'Cannot run test. Cluster {0} is already in use\n\t\t{1}'.format(cluster,failhadoop.web_utils.get_lock_data(data,cluster))
+        msg['err'] = 'Cannot run test. Cluster {0} is already in use\n\t\t{1}'.format(cluster,failhadoop.web_utils.get_lock_data(data,cluster_config,cluster))
     else:
-        if failhadoop.web_utils.write_new_lock(lockfile, cluster, component, testnumber):
+        if failhadoop.web_utils.write_new_lock(lockfile, cluster_config, cluster, component, testnumber):
           p = subprocess.Popen(cmd,stdout =
                            subprocess.PIPE,stderr=subprocess.PIPE,stdin=subprocess.PIPE)
           msg['stdout'], msg['stderr'] = p.communicate()
@@ -122,10 +122,10 @@ def get_locks():
     data['locks'] = failhadoop.web_utils.read_lock(lockfile)
     return flask.jsonify(data)
 
-@app.route(base_uri + '/<cluster>/clear-lock', methods = ['GET'])
-def release_cluster_lock(cluster):
+@app.route(base_uri + '/<config>/<cluster>/clear-lock', methods = ['GET'])
+def release_cluster_lock(config, cluster):
     msg = dict()
-    res = failhadoop.web_utils.release_cluster_lock(lockfile, cluster)
+    res = failhadoop.web_utils.release_cluster_lock(lockfile, config, cluster)
     if res:
         msg[0] = 'Cluster lock cleared'
     else:
